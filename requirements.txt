@@ -1,0 +1,5 @@
+streamlit
+mysql-connector-python
+groq
+python-dotenv
+python-dateutil
