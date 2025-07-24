@@ -71,4 +71,23 @@ def save_monthly_summary(start_date, end_date, summary):
     cursor.execute("INSERT INTO monthly_summaries (start_date, end_date, summary) VALUES (%s, %s, %s)", (start_date, end_date, summary))
     conn.commit()
     cursor.close()
+    conn.close()
+
+def get_all_daily_entries():
+    conn = get_db_connection()
+    if conn is None: return []
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT id, content FROM daily_entries ORDER BY entry_date ASC")
+    entries = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return entries
+
+def clear_chunks_table():
+    conn = get_db_connection()
+    if conn is None: return
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM entry_chunks")
+    conn.commit()
+    cursor.close()
     conn.close() 

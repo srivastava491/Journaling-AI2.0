@@ -25,7 +25,6 @@ def get_minimum_overlapping_summaries(start_date, end_date):
 
 def handle_query(query, start_date, end_date):
     query_type = classify_query(query)
-
     if query_type == "summary":
         summary_plan = get_minimum_overlapping_summaries(start_date, end_date)
         prompt = f"""You are an AI assistant analyzing a personal journal. Based on the following data retrieval plan, answer the user's query. The plan specifies which summaries (monthly, weekly, or daily) to use.\n\nData Retrieval Plan:\n{summary_plan}\n\nUser's Query: {query}\n\nAnswer:"""
