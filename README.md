@@ -67,7 +67,7 @@ pip install -r requirements.txt
 ### 1. Clone the Repository
 
 ```bash
-git clone [https://github.com/your-username/ai-journal.git](https://github.com/your-username/ai-journal.git)
+git clone https://github.com/srivastava491/Journaling-AI2.0.git
 cd ai-journal
 ```
 
