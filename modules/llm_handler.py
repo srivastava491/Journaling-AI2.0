@@ -11,18 +11,14 @@ except Exception as e:
     client = None
 
 def get_llm_response(prompt):
+    """Sends a prompt to the LLM and returns the response."""
     if not client:
         return "Error: Groq client is not initialized. Please check your API key."
     try:
         chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
+            messages=[{"role": "user", "content": prompt}],
             model="llama-3.1-8b-instant",
         )
         return chat_completion.choices[0].message.content
     except Exception as e:
-        return f"An error occurred while communicating with the LLM: {e}" 
+        return f"An error occurred while communicating with the LLM: {e}"

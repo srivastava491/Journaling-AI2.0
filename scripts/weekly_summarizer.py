@@ -1,42 +1,35 @@
 import sys
 import os
 from datetime import date, timedelta
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 from modules import database, llm_handler
 
-def summarize_last_week():
-    print("Starting weekly summarization process...")
-    today = date.today()
-    last_monday = today - timedelta(days=today.weekday() + 7)
-    last_sunday = last_monday + timedelta(days=6)
-
-    print(f"Fetching entries from {last_monday} to {last_sunday}.")
-    entries = database.get_entries_in_range(last_monday, last_sunday)
-
-    if not entries:
-        print("No entries found for the last week. Exiting.")
+def main():
+    print("Starting weekly summarization for all users...")
+    users = database.get_all_users()
+    if not users:
+        print("No users found.")
         return
 
-    full_text = "\n\n".join([f"Date: {entry['entry_date']}\n{entry['content']}" for entry in entries])
-    
-    prompt = f"""
-You are a reflective journaling assistant. Please read the following journal entries from the past week ({last_monday} to {last_sunday}) and create a cohesive summary. The summary should be around 1500 characters and highlight key events, recurring thoughts, and overall emotional trends.
+    for user in users:
+        user_id = user['id']
+        print(f"  - Generating summary for user {user_id}...")
+        today = date.today()
+        end_date = today - timedelta(days=today.weekday() + 1)
+        start_date = end_date - timedelta(days=6)
 
-Weekly Entries:
-{full_text}
+        entries = database.get_entries_in_range(user_id, start_date, end_date)
 
-Weekly Summary:
-"""
+        if not entries:
+            print(f"    - No entries found for user {user_id} last week. Skipping.")
+            continue
 
-    print("Generating summary with the LLM...")
-    try:
+        full_text = "\n\n".join([f"Date: {entry['entry_date']}\n{entry['content']}" for entry in entries])
+        prompt = f"Review the following journal entries from the past week and provide a concise summary. Highlight key events, moods, and recurring themes.\n\nEntries:\n{full_text}\n\nWeekly Summary:"
+        
         summary = llm_handler.get_llm_response(prompt)
-        database.save_weekly_summary(last_monday, last_sunday, summary)
-        print(f"Successfully generated and saved the weekly summary for {last_monday} to {last_sunday}.")
-    except Exception as e:
-        print(f"An error occurred during weekly summarization: {e}")
+        database.save_weekly_summary(user_id, start_date, end_date, summary)
+        print(f"    - Successfully generated summary for user {user_id}.")
 
 if __name__ == "__main__":
-    summarize_last_week() 
+    main()

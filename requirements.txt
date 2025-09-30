@@ -1,5 +1,10 @@
 streamlit
+streamlit-authenticator
 mysql-connector-python
-groq
 python-dotenv
+groq
+langchain-text-splitters
+sentence-transformers
+faiss-cpu
 python-dateutil
+bcrypt

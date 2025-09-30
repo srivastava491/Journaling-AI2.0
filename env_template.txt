@@ -1,0 +1,12 @@
+# Database Configuration
+MYSQL_HOST=localhost
+MYSQL_USER=your_mysql_username
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_DATABASE=ai_journal
+
+# Groq API Configuration
+GROQ_API_KEY=your_groq_api_key_here
+
+# Streamlit Configuration (optional)
+STREAMLIT_SERVER_PORT=8501
+STREAMLIT_SERVER_ADDRESS=localhost

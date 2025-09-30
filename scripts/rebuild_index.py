@@ -4,29 +4,60 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from modules import database, vector_store
-import faiss
 
-def rebuild_full_index():
-    print("Starting the index rebuilding process...")
-    print("Clearing old index and database chunks...")
-    if os.path.exists(vector_store.INDEX_PATH):
-        os.remove(vector_store.INDEX_PATH)
-    database.clear_chunks_table()
-    vector_store.index = faiss.IndexIDMap(faiss.IndexFlatL2(vector_store.embedding_dim))
-    all_entries = database.get_all_daily_entries()
-    if not all_entries:
-        print("No entries found in the database. Exiting.")
+def rebuild_all_user_indexes():
+    """Rebuild FAISS indexes for all users."""
+    print("Starting the index rebuilding process for all users...")
+    
+    # Get all users
+    users = database.get_all_users()
+    if not users:
+        print("No users found in the database. Exiting.")
         return
-    print(f"Found {len(all_entries)} entries to index.")
-    for entry in all_entries:
-        entry_id = entry['id']
-        entry_content = entry['content']
-        print(f"Processing entry ID: {entry_id}")
-        vector_store.add_entry_to_index(entry_id, entry_content)
-    print("Saving the final, complete index to disk...")
-    faiss.write_index(vector_store.index, vector_store.INDEX_PATH)
-    print("\nRebuilding process complete!")
-    print(f"The index now contains {vector_store.index.ntotal} vectors.")
+    
+    print(f"Found {len(users)} users. Building indexes...")
+    
+    for user in users:
+        user_id = user['id']
+        username = user['username']
+        print(f"\nProcessing user: {username} (ID: {user_id})")
+        
+        # Delete existing index if it exists
+        vector_store.delete_user_index(user_id)
+        
+        # Get user's entries
+        entries = database.get_all_entries(user_id)
+        if not entries:
+            print(f"  No entries found for user {username}")
+            continue
+        
+        print(f"  Found {len(entries)} entries for user {username}")
+        
+        # Process each entry and create chunks
+        for entry in entries:
+            entry_id = entry['id']
+            content = entry['content']
+            
+            # Create chunks for this entry
+            from langchain_text_splitters import RecursiveCharacterTextSplitter
+            text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=500, 
+                chunk_overlap=50,
+                separators=["\n\n", "\n", ". ", "! ", "? ", " ", ""]
+            )
+            chunks = text_splitter.split_text(content)
+            
+            # Save chunks to database
+            database.save_entry_chunks(user_id, entry_id, chunks)
+        
+        # Build the FAISS index for this user
+        success = vector_store.create_index(user_id)
+        if success:
+            print(f"  Successfully built index for user {username}")
+        else:
+            print(f"  Failed to build index for user {username}")
+    
+    print("\nIndex rebuilding process complete!")
 
 if __name__ == "__main__":
-    rebuild_full_index() 
+    rebuild_all_user_indexes() 
